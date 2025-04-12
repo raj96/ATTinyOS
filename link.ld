@@ -20,11 +20,10 @@ SECTIONS {
         *(.bss)
     } > SRAM
 
+    PROVIDE(uptime_ptr = .);
+    . += 8;
+
+    PROVIDE(stack_end = .);
     . += STACK_SIZE;
     PROVIDE(stack_start = .);
-
-    . += 1;
-    PROVIDE(heap_start = .);
-    . += HEAP_SIZE;
-    PROVIDE(heap_end = .);
 }

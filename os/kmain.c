@@ -1,49 +1,113 @@
 #include "drivers/gpio.h"
 #include "drivers/timer.h"
 #include "drivers/pll.h"
+#include "scheduler/tasker.h"
 
 #include <stdint.h>
 
-#define MCUCR *((volatile char *)(0x35 + 0x20))
+// extern void load_sp_and_pc();
+// extern void c_store();
+// extern void c_load();
+
+// extern Task_t *current_task;
+
+// inline void delay_arb() {
+//     asm volatile("ldi YH, 255");
+//     asm volatile("ldi YL, 255");
+//     asm volatile("subi YL, 1");
+//     asm volatile("brne .-4");
+//     asm volatile("subi YH, 1");
+//     asm volatile("brne .-10");
+// }
+
+#define DELAY 5000
+
+void blink_pb1() {
+    gpio_set_dir(PB1, GPIO_OUTPUT);
+
+    while(1) {
+        gpio_write(PB1, GPIO_LOW);
+        for(volatile uint32_t i = 0; i < 4 * DELAY; i++);
+        // delay_arb();
+        gpio_write(PB1, GPIO_HIGH);
+        // delay_arb();
+        for(volatile uint32_t i = 0; i <  DELAY; i++);
+    }
+}
+
+void blink_pb0() {
+    gpio_set_dir(PB0, GPIO_OUTPUT);
+
+    while(1) {
+        gpio_write(PB0, GPIO_LOW);
+        // delay_arb();
+        for(volatile uint32_t i = 0; i < DELAY; i++);
+        gpio_write(PB0, GPIO_HIGH);
+        // delay_arb();
+        for(volatile uint32_t i = 0; i < DELAY; i++);
+    }
+}
+
+void nop(volatile void *a) {
+    asm volatile("nop");
+}
 
 void kmain() {
-    // Blink once at bootup
-    gpio_pb1_high();
-    for(volatile uint16_t i = 0; i < 65535; i++) {
-        asm volatile("nop");
-    }
-    gpio_pb1_low();
-    for(volatile uint16_t i = 0; i < 65535; i++) {
-        asm volatile("nop");
-    }
+    // gpio_set_dir(PB1, GPIO_OUTPUT);
+    // // Check if PLL is enabled
+    // if(PLLCSR.PLLE != 1) {
+    //     PLLCSR.PLLE = 1;
+    //     gpio_write(PB1, GPIO_HIGH);
+    //     for(volatile uint32_t i = 0; i < 200000; i++) {
+    //         asm volatile("nop");
+    //     }
+    // }
+    
+    // // Blink while PLL is not locked
+    // for(;;) {
+    //     if(PLLCSR.PLOCK == 1) {
+    //         break;
+    //     }
+        
+    //     gpio_write(PB1, GPIO_HIGH);
+    //     for(volatile uint16_t i = 0; i < 50000; i++);
+    //     gpio_write(PB1, GPIO_LOW);
+    //     for(volatile uint16_t i = 0; i < 50000; i++);
+        
+    // }
+    // PLLCSR.PCKE = 1;
 
-    // Check if PLL is enabled
-    if(PLLCSR.PLLE == 1) {
-        gpio_pb1_high();
-    }
-    for(volatile uint32_t i = 0; i < 2000000; i++) {
-        asm volatile("nop");
-    }
+    for(volatile uint8_t i = 0 ; i < 255; i++);
 
-    // Blink while PLL is not locked
-    for(;;) {
-        volatile char x = PLLCSR.PLOCK;
-        if(x == 1) {
-            break;
-        }
-        gpio_pb1_high();
-        for(volatile uint16_t i = 0; i < 50000; i++);
-        gpio_pb1_low();
-        for(volatile uint16_t i = 0; i < 50000; i++);
-    }
-    PLLCSR.PCKE = 1;
+    asm volatile("nop");
 
-    // Turn off LED when PLL is locked
-    gpio_pb1_low();
+    tasker_init();
 
-    // asm volatile("sei");
+    // tasks[0].queued = 1;
+    // tasks[0].pch = ((uint16_t)(&blink_pb1) >> 8) & 0x0f;
+    // tasks[0].pcl = ((uint16_t)(&blink_pb1)) & 0xff;
+    // tasks[0].sph = 0x0f;
+    // tasks[0].spl = 0xff;
+    // tasks[0].sreg = 0;
+
+    // tasks[1].queued = 1;
+    // tasks[1].pch = ((uint16_t)(&blink_pb0) >> 8) & 0x0f;
+    // tasks[1].pcl = ((uint16_t)(&blink_pb0)) & 0xff;
+    // tasks[1].sph = 0x00;
+    // tasks[1].spl = 0xff;
+    // tasks[1].sreg = 0;
+
+    // current_task = &tasks[0];
+
+    // load_sp_and_pc();
+
+    tasker_add(&blink_pb0);
+    tasker_add(&blink_pb1);
+    
+    tasker_run();
 
     // Goto sleep
-    MCUCR = MCUCR | (1 << 5);
-    asm volatile("sleep");
+    while(1) {
+        asm volatile("nop");
+    }
 }

@@ -1,12 +1,3 @@
-.equ STACK_SIZE, 128
-.global STACK_SIZE
-
-.equ HEAP_SIZE, 64
-.global HEAP_SIZE
-
-.equ MAX_TASK, 4
-.global MAX_TASK
-
 .extern kmain
 .extern stack_start
 
@@ -20,10 +11,12 @@
 
 init:
     ; Remove clock division, if any
-    ; ldi r16, 128
-    ; out CLKPR, r16
-    ; ldi r16, 0
-    ; out CLKPR, r16
+    ldi r16, 128
+    ldi r17, 0
+    out CLKPR, r16
+    out CLKPR, r17
+
+    nop
 
     ; Clear r1 and setup stack
     clr r1
@@ -31,5 +24,7 @@ init:
     out SPH, r16
     ldi r16, lo8(stack_start)
     out SPL, r16
+
+    nop
 
     rjmp kmain

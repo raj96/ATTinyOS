@@ -1,8 +1,8 @@
 PROJECT=TinyOS
 
-AS=avr-as
+AS=avr-as -mmcu=avr25
 CC=avr-gcc
-CFLAGS=-Wall -O2 -mmcu=attiny85 -nostartfiles -nostdlib
+CFLAGS=-Wall -Werror -O2 -mmcu=avr25 -nostartfiles -nostdlib
 IFLAGS=-I os/include
 LFLAGS=-T link.ld -Xlinker -Map -Xlinker $(PROJECT).map
 
@@ -11,6 +11,8 @@ MCN=/home/raja/.local/bin/micronucleus
 OBJS=entry.o
 OBJS+=vectors.o
 OBJS+=os/kmain.o
+OBJS+=os/lib/scheduler/tasker.o
+OBJS+=os/lib/scheduler/switch.o
 
 $(PROJECT).elf: $(OBJS)
 	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $(PROJECT).elf

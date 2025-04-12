@@ -1,37 +1,39 @@
 #ifndef TIMER
 #define TIMER
 
+#include <stdint.h>
+
 typedef struct {
-    char WGM00_01:2;
-    char rsvd:2;
-    char COM0B0:1;
-    char COM0B1:1;
-    char COM0A0:1;
-    char COM0A1:1;
+    uint8_t WGM00_01:2;
+    uint8_t rsvd:2;
+    uint8_t COM0B0:1;
+    uint8_t COM0B1:1;
+    uint8_t COM0A0:1;
+    uint8_t COM0A1:1;
 } TCCR0A_t;
 
 #define TCCR0A  (*(volatile TCCR0A_t *)(0x2A + 0x20))
 
 typedef struct {
-    char CS:3;
-    char WGM02:1;
-    char rsvd:2;
-    char FOC0B:1;
-    char FOC0A:1;
+    uint8_t CS:3;
+    uint8_t WGM02:1;
+    uint8_t rsvd:2;
+    uint8_t FOC0B:1;
+    uint8_t FOC0A:1;
 } TCCR0B_t;
 
 #define TCCR0B  (*(volatile TCCR0B_t *)(0x33 + 0x20))
-#define OCR0A   (*(volatile char *)(0x29 + 0x20))
-#define OCR0B   (*(volatile char *)(0x28 + 0x20))
+#define OCR0A   (*(volatile uint8_t *)(0x29 + 0x20))
+#define OCR0B   (*(volatile uint8_t *)(0x28 + 0x20))
 
 typedef struct {
-    char rsvd:1;
-    char TOIE0:1;
-    char TOIE1:1;
-    char OCIE0B:1;
-    char OCIE0A:1;
-    char OCIE1B:1;
-    char OCIE1A:1;
+    uint8_t rsvd:1;
+    uint8_t TOIE0:1;
+    uint8_t TOIE1:1;
+    uint8_t OCIE0B:1;
+    uint8_t OCIE0A:1;
+    uint8_t OCIE1B:1;
+    uint8_t OCIE1A:1;
 } TIMSK_t;
 
 #define TIMSK   (*(volatile TIMSK_t *)(0x39 + 0x20))
