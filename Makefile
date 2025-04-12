@@ -1,4 +1,4 @@
-PROJECT=TinyOS
+PROJECT=ATTinyOS
 
 AS=avr-as -mmcu=avr25
 CC=avr-gcc
