@@ -1,4 +1,6 @@
 .extern current_task
+.extern cycle_count
+.extern switch_at
 
 .equ R0_OFFSET, 0
 .equ R_OFFSET, 1
@@ -21,32 +23,66 @@
 .global c_load
 .global load_sp_and_pc
 
+; Task_t structure
+; r0                1 byte
+; r2 - r31          30 bytes
+; pch - 1 byte     pcl - 1 byte
+; sph - 1 byte     spl - 1 byte
+; sreg - 1 byte
+; queued : paused : stopped - 6 bits
+
 ; 100 cycles
 c_store:
     ; Storing the current SREG in r1
     ; So it does not get affected by other operations
     in r1, SREG
+    push r1
 
     ; Push the current ZH & ZL registers
-
-    push ZH
     push ZL
+    push ZH
 
-    push YH
+    ; Load switch_at
+    ldi ZH, hi8(switch_at)
+    ldi ZL, lo8(switch_at)
+    ld r1, Z
+
+    ; Load cycle_count
+    ldi ZH, hi8(cycle_count)
+    ldi ZL, lo8(cycle_count)
+    ld ZH, Z
+
+    ; Compare cycle_count and switch_at
+    cp r1, ZH
+    breq store_regs
+
+    ; Pop stuff and return
+    pop r1
+    pop r1
+    pop r1
+
+    eor r1, r1
+    ret
+
+store_regs:
+    ; Caluclate the SP for the task
+    in ZH, SPH
+    in ZL, SPL 
+    sbiw Z, 7
+
+    ; Push the current YH & YL registers
     push YL
+    push YH
 
-    in r1, SPL
-    push r1
-    in r1, SPH
-    push r1
+    ; Push SPH and SPL of task
+    push ZL
+    push ZH
 
     ldi YH, hi8(current_task)
     ldi YL, lo8(current_task)
 
     ld ZL, Y+
     ld ZH, Y
-
-    std Z + SREG_OFFSET, r1
 
     st Z+, r0
     st Z+, r2
@@ -77,15 +113,15 @@ c_store:
     st Z+, r27
 
     ; Move to PCH in the current_task of type Task_t
-    ; adiw Z, 4
+    adiw Z, 4
 
-    ; (TOP-OF-STACK) | SPH | SPL | YL | YH | ZL | ZH | Caller PCH | Caller PCL | Task PCH | Task PCL | ...
-    ; We will move 9 & 10 spaces back to fetch the PC of the task
+    ; (TOP-OF-STACK) | Task SPH | Task SPL | YH | YL | ZH | ZL | SREG | Caller PCH | Caller PCL | Task PCH | Task PCL | ...
+    ; We will move 10 & 11 spaces back to fetch the PC of the task
     ; when it was switched
     in YH, SPH
     in YL, SPL
 
-    sbiw Y, 9
+    sbiw Y, 10
 
     ; PCH -> r1 and PCL -> r0
     ld r1, Y
@@ -106,22 +142,26 @@ c_store:
     ld ZL, Y+
     ld ZH, Y
     ; Pop off the index register values that were pushed onto the stack
-    ; YL
-    pop r1
-    std Z + YL_OFFSET, r1
     ; YH
     pop r1
     std Z + YH_OFFSET, r1
+    ; YL
+    pop r1
+    std Z + YL_OFFSET, r1
 
     ; Move address of current_task from Z to Y
     movw r28, r30
 
-    ; ZL
-    pop r1
-    std Y + ZL_OFFSET, r1
     ; ZH
     pop r1
     std Y + ZH_OFFSET, r1
+    ; ZL
+    pop r1
+    std Y + ZL_OFFSET, r1
+
+    ; SREG
+    pop r1
+    std Y + SREG_OFFSET, r1
 
     ; Set r1 back to 0 as per avr-gcc ABI
     eor r1, r1

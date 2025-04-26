@@ -11,14 +11,15 @@
 
 // extern Task_t *current_task;
 
-// inline void delay_arb() {
-//     asm volatile("ldi YH, 255");
-//     asm volatile("ldi YL, 255");
-//     asm volatile("subi YL, 1");
-//     asm volatile("brne .-4");
-//     asm volatile("subi YH, 1");
-//     asm volatile("brne .-10");
-// }
+inline void delay_arb() {
+    asm volatile("ldi YL, 255");
+    asm volatile("ldi ZH, 255");
+    asm volatile("ldi ZL, 255");
+    asm volatile("sbiw ZL, 1");
+    asm volatile("brne .-4");
+    asm volatile("dec YL");
+    asm volatile("brne .-12");
+}
 
 #define DELAY 5000
 
@@ -27,11 +28,12 @@ void blink_pb1() {
 
     while(1) {
         gpio_write(PB1, GPIO_LOW);
-        for(volatile uint32_t i = 0; i < 4 * DELAY; i++);
+        for(volatile uint32_t i = 0; i < 6 * DELAY; i++);
+        // for(volatile uint32_t i = 0; i < 4 * DELAY; i++);
         // delay_arb();
         gpio_write(PB1, GPIO_HIGH);
         // delay_arb();
-        for(volatile uint32_t i = 0; i <  DELAY; i++);
+        for(volatile uint32_t i = 0; i <  DELAY/5; i++);
     }
 }
 
@@ -41,10 +43,10 @@ void blink_pb0() {
     while(1) {
         gpio_write(PB0, GPIO_LOW);
         // delay_arb();
-        for(volatile uint32_t i = 0; i < DELAY; i++);
+        for(volatile uint32_t i = 0; i < DELAY/5; i++);
         gpio_write(PB0, GPIO_HIGH);
         // delay_arb();
-        for(volatile uint32_t i = 0; i < DELAY; i++);
+        for(volatile uint32_t i = 0; i < DELAY/5; i++);
     }
 }
 

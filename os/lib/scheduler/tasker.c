@@ -19,17 +19,17 @@ int current_tid;
 
 extern void blink_pb1();
 
-#define CYCLE_SWITCH_AT 10
 
-uint16_t ctxt_cycle_switch = 0;
+uint16_t cycle_count = 0;
+const uint16_t switch_at = 10;
 
 // Context switching
 void timer0_ovf_isr() {
     asm volatile("cli");
     c_store();
-    ctxt_cycle_switch += 1;
-    if (ctxt_cycle_switch >= CYCLE_SWITCH_AT) {
-        ctxt_cycle_switch = 0;
+    cycle_count += 1;
+    if(cycle_count >= switch_at) {
+        cycle_count = 0;
 
         current_task->queued = 1;
 
@@ -81,18 +81,11 @@ void tasker_init() {
     }
 
     current_tid = 0;
-    ctxt_cycle_switch = 0;
+    cycle_count = 0;
 }
 
 bool tasker_add(void (*task_func)(void)) {
     uint16_t pc = (uint16_t)(task_func);
-
-    // asm volatile("mov r0, %0": : "r"((pc >> 8) & 0x0f));
-    // asm volatile("mov r1, %0": : "r"(pc & 0xff));
-
-    // asm volatile("ldi r16, 1");
-
-    // blink_pb1();
 
     for (int i = 0; i < NUM_TASKS; i++) {
         if (tasks[i].stopped == 1)
