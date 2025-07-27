@@ -1,7 +1,7 @@
 PROJECT=ATTinyOS
 
-AS=avr-as -mmcu=avr25
-CC=avr-gcc
+AS=@avr-as -mmcu=avr25
+CC=@avr-gcc
 CFLAGS=-Wall -Werror -O2 -mmcu=avr25 -nostartfiles -nostdlib
 IFLAGS=-I os/include
 LFLAGS=-T link.ld -Xlinker -Map -Xlinker $(PROJECT).map
@@ -13,9 +13,13 @@ OBJS+=vectors.o
 OBJS+=os/kmain.o
 OBJS+=os/lib/scheduler/tasker.o
 OBJS+=os/lib/scheduler/switch.o
+OBJS+=os/lib/drivers/proto/i2c.o
+OBJS+=os/lib/drivers/device/ssd1306.o
 
 $(PROJECT).elf: $(OBJS)
+	@echo "Emmiting ELF $@"
 	$(CC) $(CFLAGS) $(LFLAGS) $^ -o $(PROJECT).elf
+	@echo "Done"
 
 flash: $(PROJECT).elf
 	avr-objcopy -O ihex $(PROJECT).elf $(PROJECT).hex
@@ -34,7 +38,8 @@ clean:
 dump:
 	avr-objdump -D $(PROJECT).elf > $(PROJECT).s
 
-%.o: %.c 
+%.o: %.c
+	@echo "Building $@"
 	$(CC) $(IFLAGS) $(CFLAGS) -c $< -o $@
 
 lib/%.o: include/%.h

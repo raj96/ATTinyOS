@@ -19,12 +19,18 @@ typedef struct {
     uint8_t claimed:1;
 
     uint8_t addr;
-} I2C;
+} I2C_t;
 
 // Initialize I2C device as master
-void i2c_init(I2C *i2c_dev, uint8_t sda, uint8_t scl, uint8_t addr);
+void i2c_init(I2C_t *i2c_dev, uint8_t sda, uint8_t scl, uint8_t addr);
+
+// Claim i2c bus in r/w mode
+I2C_RESPONSE i2c_claim_bus(I2C_t *i2c_dev, I2C_RW claim_mode);
 
 // Send a byte over SDA line
-void i2c_send_byte(I2C *i2c_dev, uint8_t data);
+I2C_RESPONSE i2c_send_byte(I2C_t *i2c_dev, uint8_t data);
+
+// Release i2c bus
+void i2c_release_bus(I2C_t *i2c_dev);
 
 #endif
